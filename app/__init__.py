@@ -10,7 +10,12 @@ from mail import mail
 from .auth import auth as auth_blueprint
 from .document import document as document_blueprint
 from .function import function as function_blueprint
+from .prompt import prompt as prompt_blueprint
 
+# all models should be import at once when setup
+from .auth.models import *
+from .document.models import *
+from .prompt.models import *
 
 def create_app():
     app = Flask(__name__)
@@ -28,6 +33,9 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
     db.init_app(app)  # 创建mysql连接
+    with app.app_context():
+        db.create_all()
+    
     redis_client.init_app(app)  # 创建 Redis 连接
     mail.init_app(app)  # 创建邮件客户端连接
     JWTManager(app)  # 创建 JWTManager 实例
@@ -35,5 +43,5 @@ def create_app():
     app.register_blueprint(auth_blueprint, url_prefix='/auth')  # 注册蓝图
     app.register_blueprint(document_blueprint, url_prefix='/document')  # 注册蓝图
     app.register_blueprint(function_blueprint, url_prefix='/function')  # 注册蓝图
-
+    app.register_blueprint(prompt_blueprint, url_prefix='/prompt') # 注册蓝图
     return app

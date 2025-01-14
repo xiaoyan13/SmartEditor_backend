@@ -4,10 +4,11 @@ import base64
 import requests
 from dotenv import load_dotenv
 from flask import jsonify, request, Response
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 import erniebot
 
 from . import function
+from ..prompt.models import Prompt
 
 load_dotenv()
 erniebot.api_type = "aistudio"
@@ -70,45 +71,16 @@ def asr():
 
 
 @function.route('/AIFunc', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def AIFunc():
     data = request.get_json()
     command = data['command']
     text = data['text']
-    if command == '续写':
-        prompt = ("这是从文档截取的一部分文本内容。\n" + text +
-                  "\n请帮我续写这部分内容，保持原有的写作风格和语气。续写内容应连贯且自然，长度约为两段，每段不少于100字。"
-                  "请确保续写部分与原文内容主题一致，并继续探讨相关话题。只需要续写内容，不需要返回其他内容。")
-    elif command == '润色':
-        prompt = ("这是从文档截取的一部分文本内容。\n" + text +
-                  "\n请帮我润色这部分内容，保持原有的写作风格和语气。润色后的内容应更加流畅、自然，并纠正任何语法或拼写错误。"
-                  "请确保内容的主题和信息不变。只需要返回润色后的内容，不需要返回其他内容。")
-    elif command == '校对':
-        prompt = ("这是从文档截取的一部分文本内容。\n" + text +
-                  "\n请帮我校对这部分内容，保持原有的写作风格和语气。校对后的内容应纠正所有语法、拼写和标点错误。"
-                  "请确保不改变原文的主题和信息。只需要返回校对后的内容，不需要返回其他内容。")
-    elif command == '翻译':
-        prompt = ("这是从文档截取的一部分文本内容。\n" + text +
-                  "\n根据原有的语言，请帮我将这部分内容翻译成中文或英文，保持原有的写作风格和语气。"
-                  "翻译后的内容应准确传达原文的意思，并且自然流畅。只需要返回翻译后的内容，不需要返回其他内容。")
-    elif command == '内容简化':
-        prompt = ("这是一份文档的文本内容。\n" + text +
-                  "\n请帮我简化这些内容，使其更易于理解。保留关键信息和主要观点，去除冗余和复杂的表达。"
-                  "简化后的内容应保持原文的主题和信息不变，但更简洁明了。只需要返回简化后的内容，不需要返回其他内容。")
-    elif command == '全文翻译':
-        prompt = ("这是一份文档的文本内容。\n" + text +
-                  "\n根据原有的语言，请将这些内容翻译成中文或英文，保持原有的写作风格和语气。"
-                  "翻译后的内容应准确传达原文的意思，并且自然流畅。只需要返回翻译后的内容，不需要返回其他内容。")
-    elif command == '全文总结':
-        prompt = ("这是一份文档的文本内容。\n" + text +
-                  "\n请帮我总结这些内容，保持原有的写作风格和语气。"
-                  "总结后的内容应概括文档的主要观点和结论，并且简洁明了。只需要返回总结后的内容，不需要返回其他内容。")
-    elif command == '重点提取':
-        prompt = ("这是一份文档的文本内容。\n" + text +
-                  "\n请帮我提取这些内容的重点信息。重点信息应包括主要观点、关键数据和重要结论。"
-                  "提取后的内容应简洁明了，涵盖文档的核心内容。只需要返回提取后的内容，不需要返回其他内容。")
-    else:
-        prompt = f"请采用{data['tone']}的生成风格，{data['prompt']}" if data['tone'] else data['prompt']
+    
+    user_id = get_jwt_identity()
+    prompts = Prompt.query.filter_by(user_id=user_id).all()
+    
+    prompt = next((p["content"].format(text=text) for p in prompts if p["title"] == command), "")
 
     def generate():
         response = erniebot.ChatCompletion.create(model="ernie-4.0",
