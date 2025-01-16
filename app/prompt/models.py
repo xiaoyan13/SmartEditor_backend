@@ -2,9 +2,6 @@ from database import db
 from sqlalchemy.orm import Mapped
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-  from ..auth.models import Users
-
 class Prompt(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(64), nullable=False)

@@ -11,11 +11,13 @@ from .auth import auth as auth_blueprint
 from .document import document as document_blueprint
 from .function import function as function_blueprint
 from .prompt import prompt as prompt_blueprint
+from .article_config import article_config as article_config_blueprint
 
 # all models should be import at once when setup
 from .auth.models import *
 from .document.models import *
 from .prompt.models import *
+from .article_config.models import *
 
 def create_app():
     app = Flask(__name__)
@@ -34,6 +36,7 @@ def create_app():
 
     db.init_app(app)  # 创建mysql连接
     with app.app_context():
+        # db.drop_all()
         db.create_all()
     
     redis_client.init_app(app)  # 创建 Redis 连接
@@ -44,4 +47,5 @@ def create_app():
     app.register_blueprint(document_blueprint, url_prefix='/document')  # 注册蓝图
     app.register_blueprint(function_blueprint, url_prefix='/function')  # 注册蓝图
     app.register_blueprint(prompt_blueprint, url_prefix='/prompt') # 注册蓝图
+    app.register_blueprint(article_config_blueprint, url_prefix='/article_config') # 注册蓝图
     return app
