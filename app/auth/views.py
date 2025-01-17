@@ -20,8 +20,8 @@ def varify(username, email):
     # 将验证码和用户的邮箱一起存储到 Redis 中
     redis_client.setex(f'verification_code:{email}', 300, verification_code)
     # 创建邮件消息
-    msg = Message('【妙笔】用户注册邮箱验证', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
-    msg.body = ('Hi，【{}】：\n\n您正尝试通过本邮箱接收注册【妙笔】时所需的验证码。\n\n'
+    msg = Message('【iflower】用户注册邮箱验证', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
+    msg.body = ('Hi，【{}】：\n\n您正尝试通过本邮箱接收注册【iflower】时所需的验证码。\n\n'
                 '验证码：【{}】，5分钟内有效，如非本人操作，请忽略本邮件。').format(username, verification_code)
     # 发送邮件
     mail.send(msg)
@@ -89,8 +89,8 @@ def reset_varify():
     # 将验证码和用户的邮箱一起存储到 Redis 中
     redis_client.setex(f'verification_code:{email}', 300, verification_code)
     # 创建邮件消息
-    msg = Message('【妙笔】用户密码重置', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
-    msg.body = ('Hi，【{}】：\n\n您正尝试通过本邮箱重置【妙笔】时所需的验证码。\n\n'
+    msg = Message('【iflower】用户密码重置', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
+    msg.body = ('Hi，【{}】：\n\n您正尝试通过本邮箱重置【iflower】时所需的验证码。\n\n'
                 '验证码：【{}】，5分钟内有效，如非本人操作，请忽略本邮件。').format(user.username, verification_code)
     # 发送邮件
     mail.send(msg)

@@ -52,7 +52,7 @@ def get_documents_by_user():
     user_id = get_jwt_identity()
     docs = Documents.query.filter_by(user_id=user_id, is_deleted=False).all()
     if not docs:
-        return jsonify({'message': '该用户无任何文档!', 'code': '400'})
+        return jsonify({'message': '该用户无任何文档!', 'code': '200', 'documents': [] })
     return jsonify({'documents': [doc.to_dict() for doc in docs], 'code': '200'})
 
 
@@ -125,7 +125,7 @@ def get_favorite_documents():
     user_id = get_jwt_identity()
     docs = Documents.query.filter_by(user_id=user_id, is_favorite=True).all()
     if not docs:
-        return jsonify({'message': '该用户无任何收藏文档!', 'code': '400'})
+        return jsonify({'message': '该用户无任何收藏文档!', 'code': '200', 'documents': [] })
     return jsonify({'documents': [doc.to_dict() for doc in docs], 'code': '200'})
 
 
@@ -168,7 +168,7 @@ def get_deleted_documents():
     user_id = get_jwt_identity()
     docs = Documents.query.filter_by(user_id=user_id, is_deleted=True).all()
     if not docs:
-        return jsonify({'message': '该用户无任何回收站文档!', 'code': '400'})
+        return jsonify({'message': '该用户无任何回收站文档!', 'code': '200', 'documents': [] })
     return jsonify({'documents': [doc.to_dict() for doc in docs], 'code': '200'})
 
 
@@ -177,7 +177,7 @@ def get_deleted_documents():
 def get_document_template():
     docs = Documents.query.filter_by(user_id=1).all()
     if not docs:
-        return jsonify({'message': '模板库无任何文档!', 'code': '400'})
+        return jsonify({'message': '模板库无任何文档!', 'code': '200', 'documents': [] })
     return jsonify({'documents': [doc.to_dict() for doc in docs], 'code': '200'})
 
 
@@ -201,7 +201,7 @@ def get_template_documents_by_user():
     user_id = get_jwt_identity()
     docs = Documents.query.filter_by(user_id=user_id, is_template=True, is_deleted=False).all()
     if not docs:
-        return jsonify({'message': '该用户无任何模板文档!', 'code': '400'})
+        return jsonify({'message': '该用户无任何模板文档!', 'code': '200', 'documents': []})
     return jsonify({'documents': [doc.to_dict() for doc in docs], 'code': '200'})
 
 
