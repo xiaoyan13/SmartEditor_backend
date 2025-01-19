@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, relationship
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..article_config.models import ArticleConfig
+    from ..article_generate.models import ArticleConfig
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -21,9 +21,11 @@ class ArticleConfig(db.Model):
       back_populates="article_config",
       cascade="all, delete-orphan"
     )
+    article_prompt: Mapped["ArticlePrompt"] = relationship(back_populates="article_config", cascade="all, delete-orphan")
     
     def to_dict(self):
       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     
 class UserFile(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -32,3 +34,14 @@ class UserFile(db.Model):
     
     config_id = db.Column(db.Integer, db.ForeignKey('article_config.id'), nullable=False)
     article_config: Mapped["ArticleConfig"] = relationship(back_populates="local_RAG_files")
+    
+
+class ArticlePrompt(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    content = db.Column(db.Text)
+    config_id = db.Column(db.Integer, db.ForeignKey('article_config.id'), nullable=False)
+    
+    article_config: Mapped["ArticleConfig"] = relationship(back_populates="article_prompt")
+    
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
