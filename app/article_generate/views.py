@@ -1,12 +1,12 @@
 from . import article_generate
 from .models import UserFile, ArticleConfig, ArticlePrompt
 
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from database import db
 from sqlalchemy import select
-from ..utils import model_to_dict
+from ..utils.model_to_dict import model_to_dict
 
 from .task_manager import Task
 
@@ -120,11 +120,13 @@ def update_prompt(prompt_id):
     return jsonify({'message': '后端服务器暂不可用！', 'code': 500 })
   
 # 新建任务并运行
-@article_generate.route('/create_generate_task/<int:config_id>', methods=['GET'])
+@article_generate.route('/create_generate_task/<int:config_id>', methods=['POST'])
 @jwt_required()
 def create_generate_task(config_id):
   try:
-    new_task = Task(config_id)
+    data = request.get_json()
+    article_title = data["article_title"]
+    new_task = Task(config_id, article_title)
     new_task.run()
     id = new_task.id
     return jsonify({'message': '成功', 'code': 200, 'task_id': id })
@@ -157,7 +159,7 @@ def get_task_by_config_id(config_id):
     return jsonify({'message': '获取任务异常！', 'code': 500 })
 
 
-### 获取任务的结果
+### 获取任务的结果，供心跳机制定时查询使用。 ---
 # search_result
 @article_generate.route('/task/<string:task_id>/search_result', methods=['GET'])
 @jwt_required()
@@ -191,14 +193,42 @@ def get_local_RAG_search_result(task_id):
     local_RAG_search_result = task.local_RAG_search_result
     return jsonify({'code': 200, 'local_RAG_search_result': local_RAG_search_result })
 
-# document_str
-@article_generate.route('/task/<string:task_id>/document_str', methods=['GET'])
+# outline_result
+@article_generate.route('/task/<string:task_id>/outline_result', methods=['GET'])
 @jwt_required()
-def get_document_str(task_id):
+def get_outline_result(task_id):
   task = Task.get_task_by_id(task_id)
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    doc = task.get_document()
-    task.clear()
-    return jsonify({'code': 200, 'document_str': doc })
+    outline_result = task.outline_result
+    return jsonify({'code': 200, 'outline_result': outline_result })
+
+# generate_document
+@article_generate.route('/task/<string:task_id>/generate_document', methods=['GET'])
+@jwt_required()
+def generate_document(task_id):
+  task = Task.get_task_by_id(task_id)
+  if (task is None):
+    return jsonify({'message': '任务不存在！', 'code': 400 }) 
+  else:
+    document_generator = task.get_document_generator()
+    return Response(document_generator, content_type='text/event-stream')
+
+### ---
+
+
+# 根据用户输入的大纲生成文档
+@article_generate.route('/task/<string:task_id>/generate_doc_by_outline', methods=['POST'])
+@jwt_required()
+def generate_doc_by_outline(task_id):
+  task = Task.get_task_by_id(task_id)
+  if (task is None):
+    return jsonify({'message': '任务不存在！', 'code': 400 }) 
+  else:
+    data = request.get_json()
+    outline = data["outline"]
+    task.outline_result = outline
+
+    document_generator = task.get_document_generator()
+    return Response(document_generator, content_type='text/event-stream')

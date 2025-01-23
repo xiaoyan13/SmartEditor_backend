@@ -2,18 +2,12 @@ import os
 from time import sleep
 import base64
 import requests
-from dotenv import load_dotenv
 from flask import jsonify, request, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import erniebot
 
+from ..utils.erniebot import erniebot
 from . import function
 from ..prompt.models import Prompt
-
-load_dotenv()
-erniebot.api_type = "aistudio"
-erniebot.access_token = os.getenv('ACCESS_TOKEN')
-
 
 @function.route('/ocr', methods=['POST'])
 def ocr():
