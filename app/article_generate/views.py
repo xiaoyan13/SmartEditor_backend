@@ -1,5 +1,5 @@
 from . import article_generate
-from .models import UserFile, ArticleConfig, ArticlePrompt
+from .models import UserFile, ArticleConfig, ArticlePrompt, SystemPrompt
 
 from flask import request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -9,6 +9,7 @@ from sqlalchemy import select
 from ..utils.model_to_dict import model_to_dict
 
 from .task_manager import Task
+
 
 # 查询用户的所有整文配置
 @article_generate.route('/get_configs', methods=['GET'])
@@ -38,12 +39,16 @@ def add_config():
   title = form['title']
   search_engine=form['search_engine']
   gpt = form['gpt']
+  step_by_step = int(form['step_by_step'])
   # convert 'true' to True
   networking_RAG = (form['networking_RAG'] == 'true')
   local_RAG_support = (form['local_RAG_support'] == 'true')
-  step_by_step = (form['step_by_step'] == 'true')
   
   article_config = ArticleConfig(title=title, search_engine=search_engine, gpt=gpt, networking_RAG=networking_RAG, local_RAG=local_RAG_support, step_by_step=step_by_step, user_id=user_id)
+  
+  system_prompt = form['system_prompt']
+  article_config.system_prompt = SystemPrompt(content=system_prompt)
+  
   if local_RAG_support:
     files = request.files.items()
     for file_tuple in files:
@@ -71,10 +76,12 @@ def update_config(config_id):
   article_config.title = form['title']
   article_config.search_engine=form['search_engine']
   article_config.gpt = form['gpt']
+  article_config.step_by_step = int(form['step_by_step'])
+  article_config.system_prompt = SystemPrompt(content=form['system_prompt'])
+  
   # convert 'true' to True
   article_config.networking_RAG = (form['networking_RAG'] == 'true')
   article_config.local_RAG = (form['local_RAG_support'] == 'true')
-  article_config.step_by_step = (form['step_by_step'] == 'true')
   
   if article_config.local_RAG:
     article_config.local_RAG_files = []
@@ -85,6 +92,7 @@ def update_config(config_id):
 
   try:
     db.session.commit()
+    Task.clear_task_by_config_id(article_config.id) # clear all tasks related to it.
     return jsonify({'message': '更新成功', 'code': 200})
   except Exception as e:
     print(f"处理响应时发生错误: {e}")
@@ -110,23 +118,43 @@ def delete_config(config_id):
 def update_prompt(prompt_id):
   try:
     data = request.get_json()
+    title = data["title"]
     new_content = data["content"]
     article_prompt =  db.session.get(ArticlePrompt, prompt_id)
     article_prompt.content = new_content
+    article_prompt.title = title
     db.session.commit()
     return jsonify({'code': 200 })
   except Exception as e:
     print(f"处理响应时发生错误: {e}")
     return jsonify({'message': '后端服务器暂不可用！', 'code': 500 })
-  
+
+
 # 新建任务并运行
-@article_generate.route('/create_generate_task/<int:config_id>', methods=['POST'])
+@article_generate.route('/create_generate_task/<int:config_id>/<int:step_n>', methods=['POST'])
 @jwt_required()
-def create_generate_task(config_id):
+def create_generate_task(config_id, step_n):
   try:
-    data = request.get_json()
-    article_title = data["article_title"]
-    new_task = Task(config_id, article_title)
+    data: dict = request.get_json()
+    article_title = data.get("article_title")
+    search_needed = data.get("search_needed")
+    user_input = data.get("user_input")
+    network_RAG_search_needed = data.get("network_RAG_search_needed")
+    local_RAG_search_needed = data.get("local_RAG_search_needed")
+    search_engine_used = data.get("search_engine")
+    model_used = data.get("model_used")
+    
+    new_task = Task(config_id, 
+                    step_n, 
+                    article_title=article_title,
+                    user_input=user_input,
+                    search_needed=search_needed,
+                    network_RAG_search_needed=network_RAG_search_needed,
+                    local_RAG_search_needed=local_RAG_search_needed,
+                    search_engine_used=search_engine_used,
+                    model_used=model_used,
+                )
+    
     new_task.run()
     id = new_task.id
     return jsonify({'message': '成功', 'code': 200, 'task_id': id })
@@ -159,76 +187,78 @@ def get_task_by_config_id(config_id):
     return jsonify({'message': '获取任务异常！', 'code': 500 })
 
 
-### 获取任务的结果，供心跳机制定时查询使用。 ---
-# search_result
-@article_generate.route('/task/<string:task_id>/search_result', methods=['GET'])
+### 获取任务的结果，供心跳机制定时查询使用。
+# result_name: search_result | network_RAG_search_result | local_RAG_search_result
+@article_generate.route('/task/<string:task_id>/<string:result_name>', methods=['GET'])
 @jwt_required()
-def get_search_result(task_id):
+def get_search_result(task_id, result_name):
   task = Task.get_task_by_id(task_id)
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    search_result = task.search_result
-    return jsonify({'code': 200, 'search_result': search_result })
+    if (result_name == 'search_result'):
+      return jsonify({'code': 200, 'search_result': task.search_result })
+    elif (result_name == 'network_RAG_search_result'):
+      return jsonify({'code': 200, 'network_RAG_search_result': task.network_RAG_search_result })
+    elif (result_name == 'local_RAG_search_result'):
+      return jsonify({'code': 200, 'local_RAG_search_result': task.local_RAG_search_result })
 
-# network_RAG_search_result
-@article_generate.route('/task/<string:task_id>/network_RAG_search_result', methods=['GET'])
+# 获取任务目前生成的结果
+@article_generate.route('/task/<string:task_id>', methods=['GET'])
 @jwt_required()
-def get_network_RAG_search_result(task_id):
+def fetch_task_result(task_id):
   task = Task.get_task_by_id(task_id)
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    network_RAG_search_result = task.network_RAG_search_result
-    return jsonify({'code': 200, 'network_RAG_search_result': network_RAG_search_result })
+    task_result = task.task_result
+    generate_status = task.generate_status
+    return jsonify({'code': 200, 'task_result': task_result, 'generate_status': generate_status})
 
-# local_RAG_search_result
-@article_generate.route('/task/<string:task_id>/local_RAG_search_result', methods=['GET'])
+# 获取任务的结果生成器
+# task_type: comprehend_task | geneate_outline | generate_document | expand_document
+@article_generate.route('/task/result_gen/<string:task_id>/<string:task_type>', methods=['GET'])
 @jwt_required()
-def get_local_RAG_search_result(task_id):
+def fetch_task_result_generator(task_id, task_type):
   task = Task.get_task_by_id(task_id)
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    local_RAG_search_result = task.local_RAG_search_result
-    return jsonify({'code': 200, 'local_RAG_search_result': local_RAG_search_result })
+    def get_generator_by_type(task_type):
+      if task_type == 'comprehend_task':
+        return task.comprehend_task_generator
+      elif task_type == 'geneate_outline':
+        return task.outline_generator
+      elif task_type == 'generate_document':
+        return task.doc_generator
+      elif task_type == 'expand_document':
+        return task.expand_doc_generator
 
-# outline_result
-@article_generate.route('/task/<string:task_id>/outline_result', methods=['GET'])
+    def start_generate_by_type(task_type, *args):
+      if task_type == 'comprehend_task':
+        task.start_comprehend_task(*args)
+      elif task_type == 'geneate_outline':
+        task.start_geneate_outline(*args)
+      elif task_type == 'generate_document':
+        task.start_generate_document(*args)
+      elif task_type == 'expand_document':
+        task.start_expand_doc(*args)
+    
+    # TODO：如果任务已经执行过了, 支持重新运行
+    # if task.generate_status == 'undo' or task.generate_status == 'done':
+    if task.generate_status == 'undo':
+      start_generate_by_type(task_type)
+
+    generator = get_generator_by_type(task_type)
+    return Response(generator, content_type='text/event-stream')
+
+# 删除 config 关联的所有任务
+@article_generate.route('/del_all_tasks/<int:config_id>', methods=['DELETE'])
 @jwt_required()
-def get_outline_result(task_id):
-  task = Task.get_task_by_id(task_id)
-  if (task is None):
-    return jsonify({'message': '任务不存在！', 'code': 400 }) 
-  else:
-    outline_result = task.outline_result
-    return jsonify({'code': 200, 'outline_result': outline_result })
-
-# generate_document
-@article_generate.route('/task/<string:task_id>/generate_document', methods=['GET'])
-@jwt_required()
-def generate_document(task_id):
-  task = Task.get_task_by_id(task_id)
-  if (task is None):
-    return jsonify({'message': '任务不存在！', 'code': 400 }) 
-  else:
-    document_generator = task.get_document_generator()
-    return Response(document_generator, content_type='text/event-stream')
-
-### ---
-
-
-# 根据用户输入的大纲生成文档
-@article_generate.route('/task/<string:task_id>/generate_doc_by_outline', methods=['POST'])
-@jwt_required()
-def generate_doc_by_outline(task_id):
-  task = Task.get_task_by_id(task_id)
-  if (task is None):
-    return jsonify({'message': '任务不存在！', 'code': 400 }) 
-  else:
-    data = request.get_json()
-    outline = data["outline"]
-    task.outline_result = outline
-
-    document_generator = task.get_document_generator()
-    return Response(document_generator, content_type='text/event-stream')
+def del_all_tasks(config_id):
+  try:
+    Task.clear_task_by_config_id(config_id=config_id)
+    return jsonify({'code': 200 })
+  except Exception as e:
+    print(f"处理响应时发生错误: {e}")
+    return jsonify({'message': '删除任务时异常！', 'code': 500 })
