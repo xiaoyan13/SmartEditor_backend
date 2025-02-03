@@ -74,7 +74,7 @@ def AIFunc():
     user_id = get_jwt_identity()
     prompts = Prompt.query.filter_by(user_id=user_id).all()
     
-    prompt = next((p["content"].format(text=text) for p in prompts if p["title"] == command), "")
+    prompt = next((p.content.format(text=text) for p in prompts if p.title == command), "")
 
     def generate():
         response = erniebot.ChatCompletion.create(model="ernie-4.0",

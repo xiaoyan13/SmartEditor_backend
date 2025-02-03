@@ -7,7 +7,7 @@ intelligence.
 Paragraph: {text}
 
 Constraints: Start with the delimiter ‘Keywords list:’ and limit the number of keywords to a maximum 
-of five.
+of five, still can less than five. Judge the appropriate count by yourself.**DO NOT output any tips or other sentences.**
 """
 
 def extract_search_keywords(text: str):

@@ -1,6 +1,6 @@
 from .funcs import get_tavilyai_results, tavily_extract_information
 
-def do_tavily_ai_search(search_keywords, options: dict = {}, return_count=10):
+def do_tavily_ai_search(search_keywords: str, options: dict = {}, return_count=10):
     """ 
     Common function to do Tavily AI web research.
         `search_keywords` (str): Keywords for Tavily AI search.

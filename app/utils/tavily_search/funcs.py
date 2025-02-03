@@ -1,10 +1,9 @@
 """
 https://docs.tavily.com/docs/welcome
 """
-import os
 from .tavily import TavilyClient
 
-def get_tavilyai_results(keywords, options: dict = {}, max_results=5):
+def get_tavilyai_results(keywords: str, options: dict = {}, max_results=5):
     """
     Get Tavily AI search results based on specified keywords and options.
 

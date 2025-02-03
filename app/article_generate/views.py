@@ -199,7 +199,8 @@ def get_search_result(task_id, result_name):
     if (result_name == 'search_result'):
       return jsonify({'code': 200, 'search_result': task.search_result })
     elif (result_name == 'network_RAG_search_result'):
-      return jsonify({'code': 200, 'network_RAG_search_result': task.network_RAG_search_result })
+      # network_RAG_search_result is a tuple
+      return jsonify({'code': 200, 'network_RAG_search_result': task.network_RAG_search_result[0] })
     elif (result_name == 'local_RAG_search_result'):
       return jsonify({'code': 200, 'local_RAG_search_result': task.local_RAG_search_result })
 

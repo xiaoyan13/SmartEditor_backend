@@ -2,7 +2,7 @@ import os
 import json
 import requests
 
-def do_google_serp_search(search_keywords, config):
+def do_google_serp_search(search_keywords, config=[]):
     """ Common function to do google SERP analysis and return results. """
 
     try:
@@ -13,7 +13,8 @@ def do_google_serp_search(search_keywords, config):
         
         g_results = perform_serperdev_google_search(search_keywords, geo_loc, lang, num_results)
         return g_results
-    except Exception:
+    except Exception as e:
+        print(e)
         return None
     
 
@@ -61,3 +62,8 @@ def perform_serperdev_google_search(keywords, geo_loc, lang, num_results):
     else:
         print(f"Error: {response.status_code}, {response.text}")
         return None
+
+if __name__ == '__main__':
+    from dotenv import load_dotenv
+    load_dotenv()
+    print(do_google_serp_search("hello world"))

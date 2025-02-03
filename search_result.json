@@ -1,0 +1,91 @@
+{
+  "searchParameters": {
+    "q": "deepseek artificial intelligence technology innovation machine learning",
+    "gl": "cn",
+    "hl": "zh-cn",
+    "type": "search",
+    "num": 5,
+    "autocorrect": true,
+    "engine": "google"
+  },
+  "organic": [
+    {
+      "title": "DeepSeek",
+      "link": "https://www.deepseek.com/",
+      "snippet": "DeepSeek-V3 achieves a significant breakthrough in inference speed over previous models. It tops the leaderboard among open-source models.",
+      "sitelinks": [
+        {
+          "title": "DeepSeek",
+          "link": "https://chat.deepseek.com/"
+        },
+        {
+          "title": "DeepSeek Platform",
+          "link": "https://platform.deepseek.com/"
+        },
+        {
+          "title": "DeepSeek Service Status",
+          "link": "https://status.deepseek.com/"
+        },
+        {
+          "title": "Models & Pricing",
+          "link": "https://api-docs.deepseek.com/quick_start/pricing"
+        }
+      ],
+      "position": 1
+    },
+    {
+      "title": "How China created AI model DeepSeek and shocked the world",
+      "link": "https://www.nature.com/articles/d41586-025-00259-0",
+      "snippet": "Government policies, generous funding and a pipeline of AI graduates have helped Chinese firms create advanced LLMs.",
+      "date": "4天前",
+      "position": 2
+    },
+    {
+      "title": "Explainer: Why is Chinese AI startup DeepSeek stirring up the tech ...",
+      "link": "https://english.news.cn/20250131/bd00567fb2d24a5f870db60a686be339/c.html",
+      "snippet": "As an innovative technology startup, DeepSeek is dedicated to developing cutting-edge large language models (LLMs) and related technologies.",
+      "date": "3天前",
+      "position": 3
+    },
+    {
+      "title": "DeepSeek explained: Everything you need to know - TechTarget",
+      "link": "https://www.techtarget.com/whatis/feature/DeepSeek-explained-Everything-you-need-to-know",
+      "snippet": "DeepSeek, a Chinese AI firm, is disrupting the industry with its low-cost, open source large language models, challenging U.S. tech giants.",
+      "date": "4天前",
+      "position": 4
+    },
+    {
+      "title": "DeepSeek: How a small Chinese AI company is shaking up US tech ...",
+      "link": "https://www.sydney.edu.au/news-opinion/news/2025/01/29/deepseek-ai-china-us-tech.html",
+      "snippet": "DeepSeek's “reasoning” R1 model, released last week, provoked excitement among researchers, shock among investors, and responses from AI ...",
+      "position": 5
+    }
+  ],
+  "relatedSearches": [
+    {
+      "query": "DeepSeek-Coder-V2"
+    },
+    {
+      "query": "DeepSeek Coder"
+    },
+    {
+      "query": "deepseek公司"
+    },
+    {
+      "query": "DeepSeek-V2 github"
+    },
+    {
+      "query": "deepseek价格"
+    },
+    {
+      "query": "Deepseek-math"
+    },
+    {
+      "query": "deepseek是什么"
+    },
+    {
+      "query": "DeepSeek-V2-Lite"
+    }
+  ],
+  "credits": 1
+}
