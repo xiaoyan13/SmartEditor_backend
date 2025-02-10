@@ -8,6 +8,10 @@ if TYPE_CHECKING:
 sysprompt = """
 You are an excellent GPT for article generation in **Chinese**.
 You will generated an article based on the user's reqirement.
+Pay attention to these constraints:
+1. Avoid AI-like tone, write an article like a human author as much as possible.  
+2. Don't ouput the title.
+3. Ouput in Chinese language.
 """
 
 def article_generate(task: "Task", *args):

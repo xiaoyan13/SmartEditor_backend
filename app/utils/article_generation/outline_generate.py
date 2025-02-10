@@ -24,7 +24,7 @@ def outline_generate(task: "Task", *args):
     
     The article tiltle is: {article_title};
     Related web search result(json format): {search_result};
-    Related network RAG search result(json form at): {network_RAG_search_result};
+    Related network RAG search result(json format): {network_RAG_search_result};
     Related network RAG search result: {local_RAG_search_result};
     
     If one of them is Null, just skip.
