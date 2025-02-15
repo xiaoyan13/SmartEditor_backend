@@ -10,7 +10,7 @@ from database import *
 from mail import mail
 from . import auth
 from .models import Users
-from ..prompt.models import Prompt
+from ..prompt.models import Prompt, Template, TemplateOption
 
 #  生成验证码并发送邮件
 @auth.route('/varify/<string:username>&<string:email>')
@@ -46,13 +46,21 @@ def register():
     db.session.add(new_user)
     db.session.flush()
     new_user_id = new_user.id
-    # 创建每个用户对应的默认 prompts
+    # 创建用户的润色、优化等的默认 prompts
     default_prompt_path = os.path.join(os.getcwd(), 'app/prompt/default_prompt.json')
     with open(default_prompt_path, 'r') as file:
         default_prompt = json.load(file)
         for prompt in default_prompt:
             new_prompt = Prompt(title=prompt["title"], content=prompt["content"], user_id=new_user_id)
             db.session.add(new_prompt)
+    # 创建用户的一些默认生成模板
+    default_template_path = os.path.join(os.getcwd(), 'app/prompt/default_template.json')
+    with open(default_template_path, 'r') as file:
+        default_template = json.load(file)
+        for template in default_template:
+            options = [TemplateOption(title=option["title"], prompt=option["prompt"]) for option in template["options"]]
+            new_template = Template(label=template["label"], icon=template["icon"], user_id=new_user_id, options=options)
+            db.session.add(new_template)
     
     db.session.commit()
     return jsonify({'message': '用户注册成功！', 'code': 200})

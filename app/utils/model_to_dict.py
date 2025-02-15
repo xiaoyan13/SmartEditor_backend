@@ -2,7 +2,7 @@ from sqlalchemy.orm import class_mapper, ColumnProperty
 
 def model_to_dict(obj, visited=None):
     """
-    序列化 SQLAlchemy 对象，包括其所有关系。跳过文件类型的字段、用户 relationship。
+    序列化 SQLAlchemy 对象，包括其所有关系。跳过: 1.文件类型的字段、2. 用户 relationship。
     :param obj: SQLAlchemy 模型实例
     :param visited: 用于防止循环引用的集合
     :return: 序列化后的字典
