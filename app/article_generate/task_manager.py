@@ -62,7 +62,7 @@ class Task:
       model_used='',
       search_engine_used='',
       local_RAG_search_needed=True,
-      article_title=None
+      article_title=None,
   ):
     self.id = str(uuid.uuid4())
     self.config_id = config_id
@@ -159,26 +159,40 @@ class Task:
   def get_status(self, status_wanted) -> bool:
     return getattr(self, status_wanted)
   
-  def start_comprehend_task(self, *args):
+  def start_comprehend_task(self, *args, **kargs):
     task = self
-    comprehend_generator = task_comprehend_generate(task, *args)
-    self.comprehend_task_generator = self._generator_wrapper(comprehend_generator)
+    regenerate = kargs["regenerate"]
+    if (regenerate == True):
+      self.comprehend_task_generator = None
+    comprehend_task_generator = task_comprehend_generate(task, *args)
+    self.comprehend_task_generator = self._generator_wrapper(comprehend_task_generator)
   
-  def start_geneate_outline(self, *args):
+  def start_geneate_outline(self, *args, **kargs):
     task = self
+    regenerate = kargs["regenerate"]
+    if (regenerate == True):
+      self.outline_generator = None
     outline_generator = outline_generate(task, *args)
     self.outline_generator = self._generator_wrapper(outline_generator)
   
-  def start_generate_document(self, *args):
+  def start_generate_document(self, *args, **kargs):
     task = self
+    regenerate = kargs["regenerate"]
+    if (regenerate == True):
+      self.comprehend_task_generator = None
     doc_generator = article_generate(task, *args)
     self.doc_generator = self._generator_wrapper(doc_generator)
   
-  def start_expand_doc(self, *args):
+  def start_expand_doc(self, *args, **kargs):
     task = self
+    regenerate = kargs["regenerate"]
+    if (regenerate == True):
+      self.expand_doc_generator = None
     expand_doc_generator = expand_doc_generate(task, *args)
     self.expand_doc_generator = self._generator_wrapper(expand_doc_generator)
 
+  def start_common_task(self, *args, **kwargs):
+    pass
   
   def _run(self, config, files=None):
     print("task {}: 开始运行...".format(self.id))

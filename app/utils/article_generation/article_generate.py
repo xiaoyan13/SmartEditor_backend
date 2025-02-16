@@ -11,7 +11,8 @@ You will generated an article based on the user's reqirement.
 Pay attention to these constraints:
 1. Avoid AI-like tone, write an article like a human author as much as possible.  
 2. Don't ouput the title.
-3. Ouput in Chinese language.
+3. if an outline is given, generating the result by expanding it and listing the subtitles.
+4. Ouput in Chinese language.
 """
 
 def article_generate(task: "Task", *args):
@@ -32,10 +33,20 @@ def article_generate(task: "Task", *args):
     Related network RAG search result: {local_RAG_search_result};
     
     If one of them is Null, just skip.
-    Told me how will you generate the article,** in Chinese**.
+    Output the article ** in Chinese**.
     
     """.format(article_title=article_title, search_result=search_result, network_RAG_search_result=network_RAG_search_result, local_RAG_search_result=local_RAG_search_result)
+  
     
+  import time
+  def generate():
+    doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
+    for str in doc:
+      time.sleep(0.3)
+      yield str
+  return generate()
+  
+  
   def generate():
     response = erniebot.ChatCompletion.create(model="ernie-4.0",
                                               messages=[

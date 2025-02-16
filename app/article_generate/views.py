@@ -1,5 +1,5 @@
 from . import article_generate
-from .models import UserFile, ArticleConfig, ArticlePrompt, SystemPrompt
+from .models import UserFile, ArticleConfig, ArticlePrompt, SystemPrompt, Step
 
 from flask import request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -7,6 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from database import db
 from sqlalchemy import select
 from ..utils.model_to_dict import model_to_dict
+import json
 
 from .task_manager import Task
 
@@ -49,6 +50,11 @@ def add_config():
   system_prompt = form['system_prompt']
   article_config.system_prompt = SystemPrompt(content=system_prompt)
   
+  # extract steps' info
+  steps = json.loads(form['steps'])
+  steps = [Step(title=step["title"], prompt=step["prompt"], step_order=step["step_order"]) for step in steps]
+  article_config.steps = steps
+  
   if local_RAG_support:
     files = request.files.items()
     for file_tuple in files:
@@ -82,6 +88,11 @@ def update_config(config_id):
   # convert 'true' to True
   article_config.networking_RAG = (form['networking_RAG'] == 'true')
   article_config.local_RAG = (form['local_RAG_support'] == 'true')
+  
+  # extract steps' info
+  steps = json.loads(form['steps'])
+  steps = [Step(prompt=step["prompt"], step_order=step["step_order"]) for step in steps]
+  article_config.steps = steps
   
   if article_config.local_RAG:
     article_config.local_RAG_files = []
@@ -225,31 +236,60 @@ def fetch_task_result_generator(task_id, task_type):
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
+    def start_generate_by_type(task_type, regenerate=False):
+      if task_type == 'comprehend_task':
+        task.start_comprehend_task(regenerate=regenerate)
+      elif task_type == 'geneate_outline':
+        task.start_geneate_outline(regenerate=regenerate)
+      elif task_type == 'generate_document':
+        task.start_generate_document(regenerate=regenerate)
+      elif task_type == 'expand_document':
+        task.start_expand_doc(regenerate=regenerate)
+    
     def get_generator_by_type(task_type):
       if task_type == 'comprehend_task':
         return task.comprehend_task_generator
       elif task_type == 'geneate_outline':
         return task.outline_generator
-      elif task_type == 'generate_document':
+      elif task_type == 'generate_document': 
         return task.doc_generator
       elif task_type == 'expand_document':
         return task.expand_doc_generator
 
-    def start_generate_by_type(task_type, *args):
-      if task_type == 'comprehend_task':
-        task.start_comprehend_task(*args)
-      elif task_type == 'geneate_outline':
-        task.start_geneate_outline(*args)
-      elif task_type == 'generate_document':
-        task.start_generate_document(*args)
-      elif task_type == 'expand_document':
-        task.start_expand_doc(*args)
-    
-    # TODO：如果任务已经执行过了, 支持重新运行
-    # if task.generate_status == 'undo' or task.generate_status == 'done':
-    if task.generate_status == 'undo':
-      start_generate_by_type(task_type)
+    start_generate_by_type(task_type)
+    generator = get_generator_by_type(task_type)
+    return Response(generator, content_type='text/event-stream')
 
+# 任务的重新生成
+# task_type: comprehend_task | geneate_outline | generate_document | expand_document
+@article_generate.route('/task/result_gen/<string:task_id>/<string:task_type>/regenerate', methods=['GET'])
+@jwt_required()
+def fetch_task_result_regenerator(task_id, task_type):
+  task = Task.get_task_by_id(task_id)
+  if (task is None):
+    return jsonify({'message': '任务不存在！', 'code': 400 }) 
+  else:
+    def start_generate_by_type(task_type, regenerate=False):
+      if task_type == 'comprehend_task':
+        task.start_comprehend_task(regenerate=regenerate)
+      elif task_type == 'geneate_outline':
+        task.start_geneate_outline(regenerate=regenerate)
+      elif task_type == 'generate_document':
+        task.start_generate_document(regenerate=regenerate)
+      elif task_type == 'expand_document':
+        task.start_expand_doc(regenerate=regenerate)
+    
+    def get_generator_by_type(task_type):
+      if task_type == 'comprehend_task':
+        return task.comprehend_task_generator
+      elif task_type == 'geneate_outline':
+        return task.outline_generator
+      elif task_type == 'generate_document': 
+        return task.doc_generator
+      elif task_type == 'expand_document':
+        return task.expand_doc_generator
+
+    start_generate_by_type(task_type, regenerate=True)
     generator = get_generator_by_type(task_type)
     return Response(generator, content_type='text/event-stream')
 

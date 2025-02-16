@@ -15,7 +15,9 @@ Just tell the user your thinking, don't really generate any outline and article 
 def task_comprehend_generate(task: "Task", *args):
   article_title = task.article_title
   search_result = json.dumps(task.search_result, ensure_ascii=False)
-  network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
+  network_RAG_search_result = None
+  if task.network_RAG_search_result:
+    network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
   local_RAG_search_result = task.local_RAG_search_result
   
   prompt = """
@@ -30,6 +32,14 @@ def task_comprehend_generate(task: "Task", *args):
   Told me your understanding of this task, what and how will you do to generate, aiming to generate the outline better. 
   Ouput **must in Chinese**.
   """.format(article_title=article_title, search_result=search_result, network_RAG_search_result=network_RAG_search_result, local_RAG_search_result=local_RAG_search_result)
+  
+  import time
+  def generate():
+    doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
+    for str in doc:
+      time.sleep(0.3)
+      yield str
+  return generate()
   
   def generate():
     response = erniebot.ChatCompletion.create(model="ernie-4.0",

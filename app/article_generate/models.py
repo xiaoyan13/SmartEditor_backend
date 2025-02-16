@@ -1,6 +1,6 @@
 from database import db
 from sqlalchemy.orm import Mapped, relationship
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
   from ..auth.models import Users
@@ -23,10 +23,19 @@ class ArticleConfig(db.Model):
     )
     article_prompt: Mapped["ArticlePrompt"] = relationship(back_populates="article_config", cascade="all, delete-orphan")
     system_prompt: Mapped["SystemPrompt"] = relationship(back_populates="article_config", cascade="all, delete-orphan")
+    steps: Mapped[List["Step"]] = relationship(back_populates="article_config", cascade="all, delete-orphan")
     
     def to_dict(self):
       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+class Step(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    step_order = db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String(64), nullable=False)
+    prompt = db.Column(db.Text)
+    
+    config_id = db.Column(db.Integer, db.ForeignKey('article_config.id'), nullable=False)
+    article_config: Mapped["ArticleConfig"] = relationship(back_populates="steps")
     
 class UserFile(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

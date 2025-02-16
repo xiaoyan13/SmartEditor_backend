@@ -16,7 +16,8 @@ def outline_generate(task: "Task", *args):
   else: 
     article_title = task.article_title
     search_result = json.dumps(task.search_result, ensure_ascii=False)
-    network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
+    if task.network_RAG_search_result:
+      network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
     local_RAG_search_result = task.local_RAG_search_result
     
     prompt = """
@@ -32,6 +33,16 @@ def outline_generate(task: "Task", *args):
     
     """.format(article_title=article_title, search_result=search_result, network_RAG_search_result=network_RAG_search_result, local_RAG_search_result=local_RAG_search_result)
     
+    
+  import time
+  def generate():
+    doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
+    for str in doc:
+      time.sleep(0.3)
+      yield str
+  return generate()
+    
+  
   def generate():
     response = erniebot.ChatCompletion.create(model="ernie-4.0",
                                               messages=[
