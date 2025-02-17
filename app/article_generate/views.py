@@ -165,7 +165,7 @@ def get_file(config_id, file_name):
   
   
 
-# 新建任务并运行
+# 新建任务并运行, step_n 下标从 1 开始
 @article_generate.route('/create_generate_task/<int:config_id>/<int:step_n>', methods=['POST'])
 @jwt_required()
 def create_generate_task(config_id, step_n):
@@ -178,9 +178,14 @@ def create_generate_task(config_id, step_n):
     local_RAG_search_needed = data.get("local_RAG_search_needed")
     search_engine_used = data.get("search_engine")
     model_used = data.get("model_used")
+    task_type = data.get("task_type")
+    
+    if (task_type == None):
+      raise ValueError("task_type字段为空")
     
     new_task = Task(config_id, 
-                    step_n, 
+                    step_n,
+                    task_type,
                     article_title=article_title,
                     user_input=user_input,
                     search_needed=search_needed,
@@ -252,7 +257,7 @@ def fetch_task_result(task_id):
     return jsonify({'code': 200, 'task_result': task_result, 'generate_status': generate_status})
 
 # 获取任务的结果生成器
-# task_type: comprehend_task | geneate_outline | generate_document | expand_document
+# task_type: comprehend_task | geneate_outline | generate_document | expand_document | common_generate
 @article_generate.route('/task/result_gen/<string:task_id>/<string:task_type>', methods=['GET'])
 @jwt_required()
 def fetch_task_result_generator(task_id, task_type):
@@ -260,32 +265,11 @@ def fetch_task_result_generator(task_id, task_type):
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    def start_generate_by_type(task_type, regenerate=False):
-      if task_type == 'comprehend_task':
-        task.start_comprehend_task(regenerate=regenerate)
-      elif task_type == 'geneate_outline':
-        task.start_geneate_outline(regenerate=regenerate)
-      elif task_type == 'generate_document':
-        task.start_generate_document(regenerate=regenerate)
-      elif task_type == 'expand_document':
-        task.start_expand_doc(regenerate=regenerate)
-    
-    def get_generator_by_type(task_type):
-      if task_type == 'comprehend_task':
-        return task.comprehend_task_generator
-      elif task_type == 'geneate_outline':
-        return task.outline_generator
-      elif task_type == 'generate_document': 
-        return task.doc_generator
-      elif task_type == 'expand_document':
-        return task.expand_doc_generator
-
-    start_generate_by_type(task_type)
-    generator = get_generator_by_type(task_type)
+    task.start_generate_result()
+    generator = task.get_generator()
     return Response(generator, content_type='text/event-stream')
 
 # 任务的重新生成
-# task_type: comprehend_task | geneate_outline | generate_document | expand_document
 @article_generate.route('/task/result_gen/<string:task_id>/<string:task_type>/regenerate', methods=['GET'])
 @jwt_required()
 def fetch_task_result_regenerator(task_id, task_type):
@@ -293,28 +277,8 @@ def fetch_task_result_regenerator(task_id, task_type):
   if (task is None):
     return jsonify({'message': '任务不存在！', 'code': 400 }) 
   else:
-    def start_generate_by_type(task_type, regenerate=False):
-      if task_type == 'comprehend_task':
-        task.start_comprehend_task(regenerate=regenerate)
-      elif task_type == 'geneate_outline':
-        task.start_geneate_outline(regenerate=regenerate)
-      elif task_type == 'generate_document':
-        task.start_generate_document(regenerate=regenerate)
-      elif task_type == 'expand_document':
-        task.start_expand_doc(regenerate=regenerate)
-    
-    def get_generator_by_type(task_type):
-      if task_type == 'comprehend_task':
-        return task.comprehend_task_generator
-      elif task_type == 'geneate_outline':
-        return task.outline_generator
-      elif task_type == 'generate_document': 
-        return task.doc_generator
-      elif task_type == 'expand_document':
-        return task.expand_doc_generator
-
-    start_generate_by_type(task_type, regenerate=True)
-    generator = get_generator_by_type(task_type)
+    task.start_generate_result(regenerate=True)
+    generator = task.get_generator()
     return Response(generator, content_type='text/event-stream')
 
 # 删除 config 关联的所有任务

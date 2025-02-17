@@ -14,6 +14,7 @@ from ..utils.internet_search.google_search import do_google_serp_search
 from ..utils.article_generation.outline_generate import outline_generate
 from ..utils.article_generation.article_generate import article_generate
 from ..utils.article_generation.article_expension import expand_doc_generate
+from ..utils.article_generation.common_task import common_task_generate
 from ..utils.task_comprehend import task_comprehend_generate
 
 from sqlalchemy import select
@@ -56,6 +57,7 @@ class Task:
   def __init__(self, 
       config_id: int,
       step_n: int,
+      task_type: str,
       user_input: str = '', 
       search_needed=True,
       network_RAG_search_needed=True,
@@ -67,6 +69,7 @@ class Task:
     self.id = str(uuid.uuid4())
     self.config_id = config_id
     self.step_n = step_n
+    self.task_type = task_type
     
     if user_input:
       self.user_input = user_input
@@ -91,6 +94,7 @@ class Task:
   generate_status: Literal['undo', 'doing', 'done'] = "undo"
   article_title: str = ''
   user_input: str = ''
+  task_type: str = '' # task_type: comprehend_task | geneate_outline | generate_document | expand_document | common_generate
   task_result: str = ''
   # these are setted by users and override the config's corresponding value
   search_needed: bool = True
@@ -112,6 +116,7 @@ class Task:
   outline_generator : Optional[Generator | None] = None
   doc_generator : Optional[Generator | None] = None
   expand_doc_generator : Optional[Generator | None] = None
+  common_task_generator : Optional[Generator | None] = None
   
   def run(self):
     """
@@ -159,40 +164,75 @@ class Task:
   def get_status(self, status_wanted) -> bool:
     return getattr(self, status_wanted)
   
-  def start_comprehend_task(self, *args, **kargs):
+  def start_comprehend_task(self, *args, **kwargs):
     task = self
-    regenerate = kargs["regenerate"]
+    regenerate = kwargs["regenerate"]
     if (regenerate == True):
       self.comprehend_task_generator = None
     comprehend_task_generator = task_comprehend_generate(task, *args)
     self.comprehend_task_generator = self._generator_wrapper(comprehend_task_generator)
   
-  def start_geneate_outline(self, *args, **kargs):
+  def start_geneate_outline(self, *args, **kwargs):
     task = self
-    regenerate = kargs["regenerate"]
+    regenerate = kwargs["regenerate"]
     if (regenerate == True):
       self.outline_generator = None
     outline_generator = outline_generate(task, *args)
     self.outline_generator = self._generator_wrapper(outline_generator)
   
-  def start_generate_document(self, *args, **kargs):
+  def start_generate_document(self, *args, **kwargs):
     task = self
-    regenerate = kargs["regenerate"]
+    regenerate = kwargs["regenerate"]
     if (regenerate == True):
       self.comprehend_task_generator = None
     doc_generator = article_generate(task, *args)
     self.doc_generator = self._generator_wrapper(doc_generator)
   
-  def start_expand_doc(self, *args, **kargs):
+  def start_expand_doc(self, *args, **kwargs):
     task = self
-    regenerate = kargs["regenerate"]
+    regenerate = kwargs["regenerate"]
     if (regenerate == True):
       self.expand_doc_generator = None
     expand_doc_generator = expand_doc_generate(task, *args)
     self.expand_doc_generator = self._generator_wrapper(expand_doc_generator)
 
   def start_common_task(self, *args, **kwargs):
-    pass
+    task = self
+    regenerate = kwargs["regenerate"]
+    if (regenerate == True):
+      self.common_task_generator = None
+    common_task_generator = common_task_generate(task, *args)
+    self.common_task_generator = self._generator_wrapper(common_task_generator)
+      
+  def start_generate_result(self, regenerate=False):
+    """
+      Start generate result. Before this, all search result have been getted. 
+    """
+    if self.task_type == 'comprehend_task':
+      self.start_comprehend_task(regenerate=regenerate)
+    elif self.task_type == 'geneate_outline':
+      self.start_geneate_outline(regenerate=regenerate)
+    elif self.task_type == 'generate_document':
+      self.start_generate_document(regenerate=regenerate)
+    elif self.task_type == 'expand_document':
+      self.start_expand_doc(regenerate=regenerate)
+    elif self.task_type == 'common_generate':
+      self.start_common_task(regenerate=regenerate)
+
+  def get_generator(self):
+    """
+      Return the result generator. Make sure start_generate() have been called, which means task_generator is not None.
+    """
+    if self.task_type == 'comprehend_task':
+      return self.comprehend_task_generator
+    elif self.task_type == 'geneate_outline':
+      return self.outline_generator
+    elif self.task_type == 'generate_document': 
+      return self.doc_generator
+    elif self.task_type == 'expand_document':
+      return self.expand_doc_generator
+    elif self.task_type == 'common_generate':
+      return self.common_task_generator
   
   def _run(self, config, files=None):
     print("task {}: 开始运行...".format(self.id))

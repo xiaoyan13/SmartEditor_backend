@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 sysprompt = """
 You are an excellent GPT for article generation in **Chinese**.
-You will generated an outline based on the user's reqirement.
+You will generate an outline based on the user's reqirement.
 """
 
 def outline_generate(task: "Task", *args):
