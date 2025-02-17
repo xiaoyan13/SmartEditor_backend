@@ -32,17 +32,20 @@ def create_document():
 @document.route('/<int:document_id>', methods=['GET'])
 @jwt_required()
 def get_document(document_id):
-    cache_key = f"document:{document_id}"
-    cached_doc = redis_client.get(cache_key)
-    if cached_doc:
-        print('cache hit!')
-        return jsonify({'document': json.loads(cached_doc), 'code': '200'})
-    else:
-        doc = Documents.query.get(document_id)
-        if doc is None:
-            return jsonify({'message': '查询失败!', 'code': '400'})
-        redis_client.set(cache_key, json.dumps(doc.to_dict(), cls=CustomJSONEncoder))
-        return jsonify({'document': doc.to_dict(), 'code': '200'})
+    # cache_key = f"document:{document_id}"
+    # cached_doc = redis_client.get(cache_key)
+    # if cached_doc:
+    #     print('cache hit!')
+    #     return jsonify({'document': json.loads(cached_doc), 'code': '200'})
+    # else:
+    #     doc = Documents.query.get(document_id)
+    #     if doc is None:
+    #         return jsonify({'message': '查询失败!', 'code': '400'})
+    # redis_client.set(cache_key, json.dumps(doc.to_dict(), cls=CustomJSONEncoder))
+    doc = Documents.query.get(document_id)
+    if doc is None:
+        return jsonify({'message': '查询失败!', 'code': '400'})
+    return jsonify({'document': doc.to_dict(), 'code': '200'})
 
 
 # 查询用户的所有文档
