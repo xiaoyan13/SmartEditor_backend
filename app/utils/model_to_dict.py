@@ -24,8 +24,6 @@ def model_to_dict(obj, visited=None):
             # 跳过文件类型
             if (isinstance(value, bytes) == False):
                 output[attr.key] = value
-            else:
-                print('here')
 
     # 序列化 relationship 对象
     for rel in mapper.relationships:

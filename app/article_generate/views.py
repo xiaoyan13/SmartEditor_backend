@@ -1,5 +1,5 @@
 from . import article_generate
-from .models import UserFile, ArticleConfig, ArticlePrompt, SystemPrompt, Step
+from .models import UserFile, ArticleConfig, ArticlePrompt, SystemPrompt, Step, UserFile
 
 from flask import request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -91,15 +91,23 @@ def update_config(config_id):
   
   # extract steps' info
   steps = json.loads(form['steps'])
-  steps = [Step(prompt=step["prompt"], step_order=step["step_order"]) for step in steps]
+  steps = [Step(title=step["title"], prompt=step["prompt"], step_order=step["step_order"]) for step in steps]
   article_config.steps = steps
   
   if article_config.local_RAG:
-    article_config.local_RAG_files = []
+    # For easy implement, use file_name instead of uid to diff two files
+    final_files = []
     files = request.files.items()
     for file_tuple in files:
       file = UserFile(file_name=file_tuple[0], file_data=file_tuple[1].read())
-      article_config.local_RAG_files.append(file)
+      final_files.append(file)
+    file_names = json.loads(form['file_list'])
+    for file_name in file_names:
+      name = file_name["name"]
+      for file in article_config.local_RAG_files:
+        if file.file_name == name:
+          final_files.append(file)
+    article_config.local_RAG_files = final_files
 
   try:
     db.session.commit()
@@ -139,7 +147,23 @@ def update_prompt(prompt_id):
   except Exception as e:
     print(f"处理响应时发生错误: {e}")
     return jsonify({'message': '后端服务器暂不可用！', 'code': 500 })
-
+  
+# 查询用户某配置的某文件
+@article_generate.route('/<string:config_id>/<string:file_name>', methods=['GET'])
+@jwt_required()
+def get_file(config_id, file_name):
+  try:
+    stmt = select(UserFile).where((UserFile.config_id == config_id) & (UserFile.file_name == file_name))
+    file = db.session.execute(stmt).first()[0]
+    print(file.file_name)
+    data = file.file_data
+    # file.file_data 是存储在数据库中的 blob 格式
+    return Response(data, mimetype="application/octet-stream")
+  except Exception as e:
+    print(f"处理响应时发生错误: {e}")
+    return jsonify({'message': '文件查询失败！', 'code': 500 })
+  
+  
 
 # 新建任务并运行
 @article_generate.route('/create_generate_task/<int:config_id>/<int:step_n>', methods=['POST'])
