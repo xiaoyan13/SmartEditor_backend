@@ -74,7 +74,7 @@ def AIFunc():
     user_id = get_jwt_identity()
     prompts = Prompt.query.filter_by(user_id=user_id).all()
     
-    if (data['prompt']):
+    if (data.get('prompt')):
         prompt = data['prompt']
     else:
         prompt = next((p.content.format(text=text) for p in prompts if p.title == command), "")
