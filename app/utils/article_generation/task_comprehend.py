@@ -1,10 +1,9 @@
-from ..erniebot import erniebot
+from ..tools import extract_model_name, send_message_to_model
 from typing import TYPE_CHECKING
 import json
 
 if TYPE_CHECKING:
   from app.article_generate.task_manager import Task
-
 
 sysprompt = """
 You are an excellent GPT for article generation.
@@ -16,6 +15,7 @@ def task_comprehend_generate(task: "Task", *args):
   article_title = task.article_title
   search_result = json.dumps(task.search_result, ensure_ascii=False)
   network_RAG_search_result = None
+  model_used = extract_model_name(task.model_used)
   if task.network_RAG_search_result:
     network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
   local_RAG_search_result = task.local_RAG_search_result
@@ -41,15 +41,5 @@ def task_comprehend_generate(task: "Task", *args):
       yield str
   return generate()
   
-  def generate():
-    response = erniebot.ChatCompletion.create(model="ernie-4.0",
-                                              messages=[
-                                                {"role": "user", "content": prompt}
-                                              ],
-                                              system=sysprompt,
-                                              stream=True)
-    for chunk in response:
-        result = chunk.get_result()
-        yield f"{result}"
-
-  return generate()
+  return send_message_to_model(sys_prompt=sysprompt, user_prompt=prompt, model_used=model_used)
+  

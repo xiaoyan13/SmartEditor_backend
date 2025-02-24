@@ -1,4 +1,4 @@
-from ..erniebot import erniebot
+from ..tools import extract_model_name, send_message_to_model
 from typing import TYPE_CHECKING
 import json
 
@@ -33,7 +33,8 @@ def outline_generate(task: "Task", *args):
     
     """.format(article_title=article_title, search_result=search_result, network_RAG_search_result=network_RAG_search_result, local_RAG_search_result=local_RAG_search_result)
     
-    
+  model_used = extract_model_name(task.model_used)
+  
   import time
   def generate():
     doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
@@ -43,14 +44,4 @@ def outline_generate(task: "Task", *args):
   return generate()
     
   
-  def generate():
-    response = erniebot.ChatCompletion.create(model="ernie-4.0",
-                                              messages=[
-                                                {"role": "user", "content": prompt}
-                                              ],
-                                              system=sysprompt,
-                                              stream=True)
-    for chunk in response:
-      result = chunk.get_result()
-      yield f"{result}"
-  return generate()
+  return send_message_to_model(sys_prompt=sysprompt, user_prompt=prompt, model_used=model_used)

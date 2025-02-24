@@ -15,7 +15,7 @@ from ..utils.article_generation.outline_generate import outline_generate
 from ..utils.article_generation.article_generate import article_generate
 from ..utils.article_generation.article_expension import expand_doc_generate
 from ..utils.article_generation.common_task import common_task_generate
-from ..utils.task_comprehend import task_comprehend_generate
+from ..utils.article_generation.task_comprehend import task_comprehend_generate
 
 from sqlalchemy import select
 

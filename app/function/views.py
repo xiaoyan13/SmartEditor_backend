@@ -5,7 +5,7 @@ import requests
 from flask import jsonify, request, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from ..utils.erniebot import erniebot
+from ..utils.AImodels.erniebot import erniebot
 from . import function
 from ..prompt.models import Prompt
 

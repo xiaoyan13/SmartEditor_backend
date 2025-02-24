@@ -1,4 +1,4 @@
-from .erniebot import erniebot
+from .AImodels.erniebot import erniebot
 
 prompt = """
 You are expert linguist. Extract all the keywords from the given paragraph of text about artificial 
