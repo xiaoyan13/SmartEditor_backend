@@ -132,8 +132,7 @@ class Task:
     `_clear()` is called automatically, so that task is expunged from the tasks queue.
     """
     
-    # 这里选择使用线程来运行文章生成任务
-    # Flask 并不希望用户创建线程: https://flask.palletsprojects.com/en/stable/design/#thread-locals
+    # https://flask.palletsprojects.com/en/stable/design/#thread-locals
     # 使用线程会导致 Flask 上下文丢失。解决方案: 把任务需要的信息拿到, 传给线程。
     config = db.session.get(ArticleConfig, self.config_id)
     local_files = []
@@ -240,16 +239,16 @@ class Task:
     prompt = config["article_prompt"]["content"]
     search_keywords = extract_search_keywords(prompt)
     if self.search_needed:
-      # self._search_internet(search_keywords, config)
-      time.sleep(0.3)
-      self.search_result = {'test': 'test'}
+      self._search_internet(search_keywords, config)
+      # time.sleep(0.3)
+      # self.search_result = {'test': 'test'}
       self.search_ready = True
       print("task {}: 搜索完毕".format(self.id))
     
     if self.network_RAG_search_needed:
-      # self._search_network_RAG(search_keywords)
-      time.sleep(0.3)
-      self.network_RAG_search_result = ( {'answer': 'test'}, )
+      self._search_network_RAG(search_keywords)
+      # time.sleep(0.3)
+      # self.network_RAG_search_result = ( {'answer': 'test'}, )
       self.network_RAG_search_ready = True
       print("task {}: 远程RAG检索完毕".format(self.id))
       

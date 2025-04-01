@@ -21,7 +21,10 @@ def article_generate(task: "Task", *args):
   else: 
     article_title = task.article_title
     search_result = json.dumps(task.search_result, ensure_ascii=False)
-    network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
+    if task.network_RAG_search_result:
+      network_RAG_search_result = json.dumps(task.network_RAG_search_result[0]["answer"], ensure_ascii=False)
+    else:
+      network_RAG_search_result = []
     local_RAG_search_result = task.local_RAG_search_result
     
     prompt = """
@@ -39,13 +42,13 @@ def article_generate(task: "Task", *args):
   
   model_used = extract_model_name(task.model_used)
     
-  import time
-  def generate():
-    doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
-    for str in doc:
-      time.sleep(0.3)
-      yield str
-  return generate()
+  # import time
+  # def generate():
+  #   doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
+  #   for str in doc:
+  #     time.sleep(0.3)
+  #     yield str
+  # return generate()
   
   
   return send_message_to_model(sys_prompt=sysprompt, user_prompt=prompt, model_used=model_used)

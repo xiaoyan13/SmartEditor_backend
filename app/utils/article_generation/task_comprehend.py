@@ -33,13 +33,13 @@ def task_comprehend_generate(task: "Task", *args):
   Ouput **must in Chinese**.
   """.format(article_title=article_title, search_result=search_result, network_RAG_search_result=network_RAG_search_result, local_RAG_search_result=local_RAG_search_result)
   
-  import time
-  def generate():
-    doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
-    for str in doc:
-      time.sleep(0.3)
-      yield str
-  return generate()
+  # import time
+  # def generate():
+  #   doc = ['Hello', ' world!', ' This', ' is', ' the', ' comprehend', ' document!']
+  #   for str in doc:
+  #     time.sleep(0.3)
+  #     yield str
+  # return generate()
   
   return send_message_to_model(sys_prompt=sysprompt, user_prompt=prompt, model_used=model_used)
   

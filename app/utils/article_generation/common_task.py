@@ -35,12 +35,12 @@ def common_task_generate(task: "Task", *args):
     
   model_used = extract_model_name(task.model_used)
     
-  import time
-  def generate():
-    doc = ['Hello', ' world!', ' This', ' is', ' the', ' common', ' document!']
-    for str in doc:
-      time.sleep(0.3)
-      yield str
-  return generate()
+  # import time
+  # def generate():
+  #   doc = ['Hello', ' world!', ' This', ' is', ' the', ' common', ' document!']
+  #   for str in doc:
+  #     time.sleep(0.3)
+  #     yield str
+  # return generate()
   
   return send_message_to_model(sys_prompt=sysprompt, user_prompt=prompt, model_used=model_used)
