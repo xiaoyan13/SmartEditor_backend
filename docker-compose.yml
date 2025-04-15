@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DATABASE=se_trophy
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: se_trophy
+
+  redis:
+    image: redis:7.2
+    restart: always
+
+# make sure writing "cryptography>=3.0" into requirement.txt, which is a dependency mysql needed
+# echo "cryptography>=3.0" >> requirement.txt

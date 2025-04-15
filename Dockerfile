@@ -1,5 +1,5 @@
 # 使用Python作为基础镜像
-FROM python:3.12
+FROM python:3.10
 
 # 设置工作目录
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY . /app
 RUN pip install -r requirements.txt
 
 # 暴露所使用的端口
-EXPOSE 8000
+EXPOSE 5000
 
 # 启动Flask应用程序
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "run:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "run:app"]

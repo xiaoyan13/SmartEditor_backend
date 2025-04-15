@@ -113,3 +113,4 @@ wcwidth==0.2.13
 Werkzeug==3.0.6
 wsproto==1.2.0
 yarl==1.18.3
+cryptography>=3.0

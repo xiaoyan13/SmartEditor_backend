@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from sqlalchemy import inspect
 
 from database import *
 from mail import mail
@@ -26,7 +27,14 @@ def create_app():
     load_dotenv()  # 加载 .env 文件(存储敏感信息)
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False  # 设置ACCESS_TOKEN的永不过期
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+    
+    docker_db_host = os.getenv("MYSQL_HOST")
+    if docker_db_host:
+        # docker
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABACE_FOR_DOCKER')
+    else:
+        # if docker doesn't exist
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
     app.config['REDIS_URL'] = os.getenv('REDIS_DATABASE_URI')
     app.config['MAIL_SERVER'] = 'smtp.qq.com'
     app.config['MAIL_PORT'] = 465
@@ -37,7 +45,12 @@ def create_app():
     db.init_app(app)  # 创建mysql连接
     with app.app_context():
         # db.drop_all()
-        db.create_all()
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        if 'article_prompt' not in existing_tables:
+            db.create_all()
+        else:
+            print("Table 'article_prompt' already exists.")
     
     redis_client.init_app(app)  # 创建 Redis 连接
     mail.init_app(app)  # 创建邮件客户端连接
